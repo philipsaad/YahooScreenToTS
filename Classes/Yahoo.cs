@@ -37,6 +37,7 @@ namespace YahooScreenToTS
             string internalVideoID = videoIDTag.Attributes["data-uuid"].Value;
 
             string videoUrl = "https://video.media.yql.yahoo.com/v1/video/sapi/streams/" + internalVideoID;
+            wc.Headers.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.89 Safari/537.36");
             string videoData = wc.DownloadString(videoUrl);
 
             JObject videoInfo = JObject.Parse(videoData);
@@ -64,6 +65,13 @@ namespace YahooScreenToTS
                     string format = stream["format"].Value<string>();
                     string url = host + path;
 
+                    string extension = "." + format;
+
+                    if (format == "m3u8_playlist")
+                    {
+                        extension = ".ts";
+                    }
+
                     YahooSource vr = new YahooSource()
                     {
                         Host = host,
@@ -77,7 +85,7 @@ namespace YahooScreenToTS
                         H264Profile = h264Profile,
                         CDN = cdn,
                         Format = format,
-                        FileName = fileName + "." + format,
+                        FileName = fileName + extension,
                         Url = url,
                     };
 
@@ -149,15 +157,12 @@ namespace YahooScreenToTS
 
             List<string> m3uDataArray = m3uData.Split(new string[] { "\n" }, StringSplitOptions.None).ToList();
 
-            string rootUrl = transportFileUrl.Substring(0, transportFileUrl.LastIndexOf("/") + 1);
-
             foreach (string m3uLine in m3uDataArray)
             {
                 if (!String.IsNullOrWhiteSpace(m3uLine) && !m3uLine.StartsWith("#"))
                 {
-                    result.Add(rootUrl + m3uLine);
+                    result.Add(m3uLine);
                 }
-
             }
 
             return result;
