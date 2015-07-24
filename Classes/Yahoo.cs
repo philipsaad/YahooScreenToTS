@@ -102,37 +102,44 @@ namespace YahooScreenToTS
 
             string title = videoInfo["meta"]["title"].ToString();
 
-            IEnumerable<string> mainArtists = videoInfo["meta"]["credits"]["main_artists"].ToString().Split(',');
-            IEnumerable<string> featuredArtists = videoInfo["meta"]["credits"]["featured_artists"].ToString().Split(',');
+            IEnumerable<string> mainArtists = videoInfo["meta"]["credits"]["main_artists"].ToString().Split(new char[','], StringSplitOptions.RemoveEmptyEntries);
+            IEnumerable<string> featuredArtists = videoInfo["meta"]["credits"]["featured_artists"].ToString().Split(new char[','], StringSplitOptions.RemoveEmptyEntries);
 
-            int commaIndex = -1;
-
-            fileName = string.Join(", ", mainArtists);
-
-            commaIndex = fileName.LastIndexOf(",");
-            if (commaIndex > -1)
+            if (mainArtists.Count() == 0 && featuredArtists.Count() == 0)
             {
-                fileName = fileName.Substring(0, commaIndex) + " &" + fileName.Substring(commaIndex + 1);
+                fileName = string.Join("_", title.Replace(":", " -").Split(Path.GetInvalidFileNameChars()));
             }
-
-            fileName += " - " + title;
-
-            if (featuredArtists.Count() > 0)
+            else
             {
-                fileName += " (feat. " + string.Join(", ", featuredArtists) + ")";
+                int commaIndex = -1;
+
+                fileName = string.Join(", ", mainArtists);
 
                 commaIndex = fileName.LastIndexOf(",");
-                if (commaIndex > -1 && featuredArtists.Count() > 1)
+                if (commaIndex > -1)
                 {
                     fileName = fileName.Substring(0, commaIndex) + " &" + fileName.Substring(commaIndex + 1);
                 }
-            }
 
-            fileName = string.Join("_", fileName.Split(Path.GetInvalidFileNameChars()));
-            fileName = fileName.Replace(" (Official Video)", String.Empty);
-            fileName = fileName.Replace(" (Official)", String.Empty);
-            fileName = fileName.Replace(" (Explicit Video)", String.Empty);
-            fileName = fileName.Replace(" (Explicit)", String.Empty);
+                fileName += " - " + title;
+
+                if (featuredArtists.Count() > 0)
+                {
+                    fileName += " (feat. " + string.Join(", ", featuredArtists) + ")";
+
+                    commaIndex = fileName.LastIndexOf(",");
+                    if (commaIndex > -1 && featuredArtists.Count() > 1)
+                    {
+                        fileName = fileName.Substring(0, commaIndex) + " &" + fileName.Substring(commaIndex + 1);
+                    }
+                }
+
+                fileName = string.Join("_", fileName.Split(Path.GetInvalidFileNameChars()));
+                fileName = fileName.Replace(" (Official Video)", String.Empty);
+                fileName = fileName.Replace(" (Official)", String.Empty);
+                fileName = fileName.Replace(" (Explicit Video)", String.Empty);
+                fileName = fileName.Replace(" (Explicit)", String.Empty);
+            }            
 
             return fileName;
         }
